@@ -6,7 +6,7 @@ This project would be something similar to Calendly (and lookalike projects) but
 
 It just give the ability to connect multiple calendars (with Google Calendar integration) and obtain a unique link to book availabities.
 
-## Technologies
+## Technologies
 
 ### Client Side
 
