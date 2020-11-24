@@ -53,6 +53,9 @@ const App = () => {
             <Button variant="contained" color="primary">
               Connect your Calendar
             </Button>
+            <Button variant="contained" color="primary">
+              Create a new BookMe Event
+            </Button>
           </Grid>
         </Grid>
       )}
