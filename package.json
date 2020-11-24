@@ -1,0 +1,19 @@
+{
+  "name": "bookme",
+  "version": "1.0.0",
+  "description": "A straightforward solution to create a booking link merging multiple calendars",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/storrisi/bookme.git"
+  },
+  "author": "Simone Torrisi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/storrisi/bookme/issues"
+  },
+  "homepage": "https://github.com/storrisi/bookme#readme"
+}
