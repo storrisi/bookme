@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { GoogleLogin } from "react-google-login"
 import { Avatar, Button, Grid, Typography } from "@material-ui/core"
 import { makeStyles } from "@material-ui/core/styles"
-import { refreshTokenSetup } from "./utils/token"
+import { refreshTokenSetup } from "../../utils/token"
 
 const useStyles = makeStyles((theme) => ({
   root: {
