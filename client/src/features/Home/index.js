@@ -1,8 +1,8 @@
 import React, { useState } from "react"
 import { GoogleLogin } from "react-google-login"
-import { Avatar, Button, Grid, Typography } from "@material-ui/core"
-import { makeStyles } from "@material-ui/core/styles"
+import { Avatar, Button, Grid, Typography, makeStyles } from "@material-ui/core"
 import { refreshTokenSetup } from "../../utils/token"
+import { Link } from "react-router-dom"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -53,9 +53,11 @@ const App = () => {
             <Button variant="contained" color="primary">
               Connect your Calendar
             </Button>
-            <Button variant="contained" color="primary">
-              Create a new BookMe Event
-            </Button>
+            <Link to="/create-event">
+              <Button variant="contained" color="primary">
+                Create a new BookMe Event
+              </Button>
+            </Link>
           </Grid>
         </Grid>
       )}
