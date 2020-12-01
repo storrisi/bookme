@@ -22,7 +22,7 @@ const daySelection = [
   { value: "tuesday", label: "Tuesday" },
   { value: "wedsneday", label: "Wedsneday" },
   { value: "thursday", label: "Thursday" },
-  { value: "friday", label: "friday" },
+  { value: "friday", label: "Friday" },
   { value: "saturday", label: "Saturday" },
   { value: "sunday", label: "Sunday" },
 ]

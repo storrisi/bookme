@@ -1,5 +1,18 @@
 import React, { useState } from "react"
-import { AppBar, Button, Grid, makeStyles, TextField, Toolbar } from "@material-ui/core"
+import {
+  AppBar,
+  Button,
+  Grid,
+  makeStyles,
+  TextField,
+  Slider,
+  Tooltip,
+  Typography,
+  Switch,
+  FormControlLabel,
+} from "@material-ui/core"
+import moment from "moment"
+import "moment-duration-format"
 import CreateEventElement from "./CreateEventElement"
 import Event from "../../utils/EventClass"
 
@@ -17,13 +30,34 @@ const useStyles = makeStyles((theme) => ({
     right: 0,
     margin: 20,
   },
+  slider: {
+    width: 300,
+  },
+  label: {
+    fontSize: "10px",
+  },
 }))
 
-const emptyEvent = { day: "", startingHour: "", endingHour: "" }
+const emptyEvent = { day: "workingDays", startingHour: "08:00", endingHour: "18:00" }
+
+function ValueLabelComponent(props) {
+  const { children, open, value } = props
+
+  return (
+    <Tooltip open={open} enterTouchDelay={0} placement="top" title={value}>
+      {children}
+    </Tooltip>
+  )
+}
 
 export default function CreateEvent() {
   const classes = useStyles()
   const [eventName, setEventName] = useState("")
+  const [allowMaxEventsPerDay, setAllowMaxEventsPerDay] = useState(false)
+  const [allowMaxEventsPerWeek, setAllowMaxEventsPerWeek] = useState(false)
+  const [eventDuration, setEventDuration] = useState(60)
+  const [maxEventsPerDay, setMaxEventsPerDay] = useState(1)
+  const [maxEventsPerWeek, setMaxEventsPerWeek] = useState(1)
   const [events, setEvents] = useState([{ ...emptyEvent }])
   const [errors, setErrors] = useState({})
 
@@ -41,7 +75,9 @@ export default function CreateEvent() {
     setErrors(Event.validate({ eventName, slots: events }))
   }
 
-  console.log(errors)
+  function valuetext(value) {
+    return moment.duration(value, "minutes").format("h [hrs], m [min]")
+  }
 
   return (
     <div>
@@ -50,15 +86,109 @@ export default function CreateEvent() {
           Save Event
         </Button>
       </AppBar>
-      <Grid className={classes.root} container direction="column" justify="center" alignItems="center">
-        <TextField
-          placeholder="Event Name"
-          value={eventName}
-          onChange={(event) => setEventName(event.target.value)}
-          error={errors.hasOwnProperty("eventName")}
-          id="standard-error-helper-text"
-          helperText={errors.hasOwnProperty("eventName") && "Event Name is mandatory"}
-        />
+      <Grid className={classes.root} spacing={4} container direction="column" justify="center" alignItems="center">
+        <Grid item>
+          <TextField
+            className={classes.slider}
+            placeholder="Event Name"
+            value={eventName}
+            onChange={(event) => setEventName(event.target.value)}
+            error={errors.hasOwnProperty("eventName")}
+            id="standard-error-helper-text"
+            helperText={errors.hasOwnProperty("eventName") && "Event Name is mandatory"}
+          />
+        </Grid>
+        <Grid item>
+          <Slider
+            value={eventDuration}
+            valueLabelFormat={valuetext}
+            aria-labelledby="discrete-slider-small-steps"
+            step={30}
+            marks
+            min={30}
+            max={480}
+            valueLabelDisplay="on"
+            ValueLabelComponent={ValueLabelComponent}
+            className={classes.slider}
+            onChange={(event, newValue) => setEventDuration(newValue)}
+          />
+          <Typography>Slide to choose Event Duration</Typography>
+        </Grid>
+        <Grid item>
+          <Grid spacing={4} container justify="center" alignItems="center">
+            <Grid item>
+              <TextField
+                className={classes.slider}
+                id="standard-number"
+                label="Maximum Events per day"
+                type="number"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                value={maxEventsPerDay}
+                onChange={(event) => setMaxEventsPerDay(event.target.value)}
+                disabled={!allowMaxEventsPerDay}
+              />
+            </Grid>
+            <Grid item>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={allowMaxEventsPerDay}
+                    onChange={(event) => setAllowMaxEventsPerDay(event.target.checked)}
+                    color="primary"
+                    name="checkedB"
+                    inputProps={{ "aria-label": "primary checkbox" }}
+                    size="small"
+                  />
+                }
+                labelPlacement="end"
+                label="Enable Max Events per day control"
+                classes={{
+                  label: classes.label,
+                }}
+              />
+            </Grid>
+          </Grid>
+        </Grid>
+        <Grid item>
+          <Grid spacing={4} container justify="center" alignItems="center">
+            <Grid item>
+              {" "}
+              <TextField
+                className={classes.slider}
+                id="standard-number"
+                label="Maximum Events per week"
+                type="number"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                value={maxEventsPerWeek}
+                onChange={(event) => setMaxEventsPerWeek(event.target.value)}
+                disabled={!allowMaxEventsPerWeek}
+              />
+            </Grid>
+            <Grid item>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={allowMaxEventsPerWeek}
+                    onChange={(event) => setAllowMaxEventsPerWeek(event.target.checked)}
+                    color="primary"
+                    name="checkedB"
+                    inputProps={{ "aria-label": "primary checkbox" }}
+                    size="small"
+                  />
+                }
+                labelPlacement="end"
+                label="Enable Max Events per week control"
+                classes={{
+                  label: classes.label,
+                }}
+              />
+            </Grid>
+          </Grid>
+        </Grid>
         {events.map((event, index) => (
           <CreateEventElement
             item={event}
