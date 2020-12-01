@@ -5,7 +5,9 @@ import AddIcon from "@material-ui/icons/Add"
 import Event from "../../utils/EventClass"
 
 const useStyles = makeStyles((theme) => ({
-  root: {},
+  root: {
+    width: "100%",
+  },
   formControl: {
     margin: theme.spacing(1),
     minWidth: 120,

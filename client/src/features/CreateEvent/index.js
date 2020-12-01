@@ -18,7 +18,8 @@ import Event from "../../utils/EventClass"
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    height: "100vh",
+    width: "100%",
+    height: "90vh",
   },
   appBar: {
     top: 0,
