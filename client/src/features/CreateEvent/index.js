@@ -10,11 +10,17 @@ import {
   Typography,
   Switch,
   FormControlLabel,
+  Snackbar,
 } from "@material-ui/core"
 import moment from "moment"
 import "moment-duration-format"
 import CreateEventElement from "./CreateEventElement"
 import Event from "../../utils/EventClass"
+import MuiAlert from "@material-ui/lab/Alert"
+
+function Alert(props) {
+  return <MuiAlert elevation={6} variant="filled" {...props} />
+}
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -37,6 +43,12 @@ const useStyles = makeStyles((theme) => ({
   label: {
     fontSize: "10px",
   },
+  snackbar: {
+    width: "100%",
+    "& > * + *": {
+      marginTop: theme.spacing(2),
+    },
+  },
 }))
 
 const emptyEvent = { day: "workingDays", startingHour: "08:00", endingHour: "18:00" }
@@ -51,16 +63,24 @@ function ValueLabelComponent(props) {
   )
 }
 
+const DEFAULT_EVENT_NAME = ""
+const DEFAULT_ALLOW_MAX_EVENTS = false
+const DEFAULT_EVENT_DURATION = 60
+const DEFAULT_MAX_EVENTS = 1
+const DEFAULT_EVENTS = [{ ...emptyEvent }]
+
 export default function CreateEvent() {
   const classes = useStyles()
-  const [eventName, setEventName] = useState("")
-  const [allowMaxEventsPerDay, setAllowMaxEventsPerDay] = useState(false)
-  const [allowMaxEventsPerWeek, setAllowMaxEventsPerWeek] = useState(false)
-  const [eventDuration, setEventDuration] = useState(60)
-  const [maxEventsPerDay, setMaxEventsPerDay] = useState(1)
-  const [maxEventsPerWeek, setMaxEventsPerWeek] = useState(1)
-  const [events, setEvents] = useState([{ ...emptyEvent }])
+  const [eventName, setEventName] = useState(DEFAULT_EVENT_NAME)
+  const [allowMaxEventsPerDay, setAllowMaxEventsPerDay] = useState(DEFAULT_ALLOW_MAX_EVENTS)
+  const [allowMaxEventsPerWeek, setAllowMaxEventsPerWeek] = useState(DEFAULT_ALLOW_MAX_EVENTS)
+  const [eventDuration, setEventDuration] = useState(DEFAULT_EVENT_DURATION)
+  const [maxEventsPerDay, setMaxEventsPerDay] = useState(DEFAULT_MAX_EVENTS)
+  const [maxEventsPerWeek, setMaxEventsPerWeek] = useState(DEFAULT_MAX_EVENTS)
+  const [events, setEvents] = useState(DEFAULT_EVENTS)
   const [errors, setErrors] = useState({})
+  const [openConfirmation, setOpenConfirmation] = useState(false)
+  const [openError, setOpenError] = useState(false)
 
   const onEventAdd = (item, index) => {
     const list = events.concat([emptyEvent])
@@ -72,12 +92,49 @@ export default function CreateEvent() {
     setEvents(events.filter((_, index) => index !== indexToDelete))
   }
 
-  const onSave = () => {
-    setErrors(Event.validate({ eventName, slots: events }))
+  const onSave = async () => {
+    const profileObj = JSON.parse(localStorage.getItem("profileObj"))
+    const validationErrors = Event.validate({ eventName, slots: events })
+    setErrors(validationErrors)
+    if (Object.keys(validationErrors).length > 0) return
+    const res = await Event.save(
+      {
+        name: eventName,
+        allowMaxEventsPerDay,
+        allowMaxEventsPerWeek,
+        maxEventsPerDay,
+        maxEventsPerWeek,
+        availabilities: events,
+      },
+      profileObj.googleId
+    )
+    if (!res) return setOpenError(true)
+
+    setOpenConfirmation(true)
+    resetStatus()
+  }
+
+  const resetStatus = () => {
+    setEventName(DEFAULT_EVENT_NAME)
+    setAllowMaxEventsPerDay(DEFAULT_ALLOW_MAX_EVENTS)
+    setAllowMaxEventsPerWeek(DEFAULT_ALLOW_MAX_EVENTS)
+    setEventDuration(DEFAULT_EVENT_DURATION)
+    setMaxEventsPerDay(DEFAULT_MAX_EVENTS)
+    setMaxEventsPerWeek(DEFAULT_MAX_EVENTS)
+    setEvents(DEFAULT_EVENTS)
   }
 
   function valuetext(value) {
     return moment.duration(value, "minutes").format("h [hrs], m [min]")
+  }
+
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return
+    }
+
+    setOpenConfirmation(false)
+    setOpenError(false)
   }
 
   return (
@@ -202,6 +259,12 @@ export default function CreateEvent() {
           />
         ))}
       </Grid>
+      <Snackbar open={openConfirmation} autoHideDuration={3000} onClose={handleClose}>
+        <Alert severity="success">Event saved successfully!</Alert>
+      </Snackbar>
+      <Snackbar open={openError} autoHideDuration={3000} onClose={handleClose}>
+        <Alert severity="error">Something went wrong</Alert>
+      </Snackbar>
     </div>
   )
 }

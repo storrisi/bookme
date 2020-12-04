@@ -18,6 +18,7 @@ const App = () => {
     console.log("Login Success: currentUser:", res.profileObj)
     refreshTokenSetup(res)
     setUser(res.profileObj)
+    localStorage.setItem("profileObj", JSON.stringify(res.profileObj))
   }
 
   const onFailure = (res) => {

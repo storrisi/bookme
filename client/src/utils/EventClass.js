@@ -1,3 +1,4 @@
+import firebase from "./firebase"
 export default class Event {
   static EMPTY_VALUE = "EMPTY_VALUE"
   static EMPTY_DAY = "EMPTY_DAY"
@@ -25,5 +26,22 @@ export default class Event {
     if (event.startingHour >= event.endingHour) return this.START_GREATER_THAN_END
     if (event.endingHour <= event.startingHour) return this.END_LOWER_THAN_START
     return true
+  }
+
+  static save(event, userId) {
+    const eventsRef = firebase.database().ref("events")
+    var userEventsRef = eventsRef.child(userId)
+
+    var newPostRef = userEventsRef.push()
+    return new Promise((resolve, reject) => {
+      newPostRef.set(event, (error) => {
+        if (error) {
+          console.error(error)
+          reject(false)
+        } else {
+          resolve(true)
+        }
+      })
+    })
   }
 }

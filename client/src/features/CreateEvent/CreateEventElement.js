@@ -37,7 +37,6 @@ export default function CreateEventElement({ item, onAdd, onRemove, hideDelete, 
   const onEventAdd = () => onAdd(eventData)
 
   useEffect(() => {
-    console.log(item)
     setEventData(item)
   }, [item])
 
