@@ -17,6 +17,7 @@ import "moment-duration-format"
 import CreateEventElement from "./CreateEventElement"
 import Event from "../../utils/EventClass"
 import MuiAlert from "@material-ui/lab/Alert"
+import { urlValidation } from "../../utils/utils"
 
 function Alert(props) {
   return <MuiAlert elevation={6} variant="filled" {...props} />
@@ -64,6 +65,7 @@ function ValueLabelComponent(props) {
 }
 
 const DEFAULT_EVENT_NAME = ""
+const DEFAULT_EVENT_URL = ""
 const DEFAULT_ALLOW_MAX_EVENTS = false
 const DEFAULT_EVENT_DURATION = 60
 const DEFAULT_MAX_EVENTS = 1
@@ -72,6 +74,7 @@ const DEFAULT_EVENTS = [{ ...emptyEvent }]
 export default function CreateEvent() {
   const classes = useStyles()
   const [eventName, setEventName] = useState(DEFAULT_EVENT_NAME)
+  const [eventUrl, setEventUrl] = useState(DEFAULT_EVENT_URL)
   const [allowMaxEventsPerDay, setAllowMaxEventsPerDay] = useState(DEFAULT_ALLOW_MAX_EVENTS)
   const [allowMaxEventsPerWeek, setAllowMaxEventsPerWeek] = useState(DEFAULT_ALLOW_MAX_EVENTS)
   const [eventDuration, setEventDuration] = useState(DEFAULT_EVENT_DURATION)
@@ -100,6 +103,8 @@ export default function CreateEvent() {
     const res = await Event.save(
       {
         name: eventName,
+        url: eventUrl,
+        duration: eventDuration,
         allowMaxEventsPerDay,
         allowMaxEventsPerWeek,
         maxEventsPerDay,
@@ -116,6 +121,7 @@ export default function CreateEvent() {
 
   const resetStatus = () => {
     setEventName(DEFAULT_EVENT_NAME)
+    setEventUrl(DEFAULT_EVENT_URL)
     setAllowMaxEventsPerDay(DEFAULT_ALLOW_MAX_EVENTS)
     setAllowMaxEventsPerWeek(DEFAULT_ALLOW_MAX_EVENTS)
     setEventDuration(DEFAULT_EVENT_DURATION)
@@ -154,6 +160,19 @@ export default function CreateEvent() {
             error={errors.hasOwnProperty("eventName")}
             id="standard-error-helper-text"
             helperText={errors.hasOwnProperty("eventName") && "Event Name is mandatory"}
+          />
+        </Grid>
+        <Grid item>
+          <TextField
+            className={classes.slider}
+            placeholder="Event Url"
+            value={eventUrl}
+            onChange={(event) =>
+              (urlValidation(event.target.value) || event.target.value === "") && setEventUrl(event.target.value)
+            }
+            error={errors.hasOwnProperty("eventUrl")}
+            id="standard-error-helper-text"
+            helperText={errors.hasOwnProperty("eventUrl") && "Event Url is mandatory"}
           />
         </Grid>
         <Grid item>
