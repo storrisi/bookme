@@ -15,7 +15,7 @@ const App = () => {
   const classes = useStyles()
 
   const onSuccess = (res) => {
-    console.log("Login Success: currentUser:", res.profileObj)
+    console.log(res)
     refreshTokenSetup(res)
     setUser(res.profileObj)
     localStorage.setItem("profileObj", JSON.stringify(res.profileObj))
@@ -38,6 +38,7 @@ const App = () => {
           onFailure={onFailure}
           cookiePolicy={"single_host_origin"}
           isSignedIn={true}
+          scopes={["https://www.googleapis.com/auth/calendar", "https://www.googleapis.com/auth/calendar.readonly"]}
         />
       ) : (
         <Grid container direction="column" justify="center" alignItems="center" spacing={4}>

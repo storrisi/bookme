@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   AppBar,
   Button,
@@ -12,12 +12,13 @@ import {
   FormControlLabel,
   Snackbar,
 } from "@material-ui/core"
+import MuiAlert from "@material-ui/lab/Alert"
 import moment from "moment"
 import "moment-duration-format"
 import CreateEventElement from "./CreateEventElement"
 import Event from "../../utils/EventClass"
-import MuiAlert from "@material-ui/lab/Alert"
 import { urlValidation } from "../../utils/utils"
+import ApiCalendar from "../../utils/GoogleApis"
 
 function Alert(props) {
   return <MuiAlert elevation={6} variant="filled" {...props} />
@@ -142,6 +143,19 @@ export default function CreateEvent() {
     setOpenConfirmation(false)
     setOpenError(false)
   }
+
+  useEffect(() => {
+    async function fetchData() {
+      const api = new ApiCalendar()
+      try {
+        setTimeout(() => api.initClient().then(() => api.getCalendarList().then((res) => console.log(res))), 1000)
+        //console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
+    }
+    fetchData()
+  }, [])
 
   return (
     <div>
