@@ -1,3 +1,4 @@
+import moment from "moment"
 import firebase from "./firebase"
 export default class Event {
   static EMPTY_VALUE = "EMPTY_VALUE"
@@ -43,5 +44,60 @@ export default class Event {
         }
       })
     })
+  }
+
+  static async get(userId, eventUrl) {
+    const eventsRef = firebase.database().ref("events")
+    const userEventsRef = eventsRef.child(userId)
+
+    const snapshot = await userEventsRef.orderByChild("url").equalTo(eventUrl).once("value")
+
+    const queryResult = snapshot.val()
+    const trip = Object.values(queryResult)[0]
+    return trip
+  }
+
+  static getAvailableDays(availabilities) {
+    return availabilities.reduce((previousValue, currentValue) => {
+      if (currentValue.day === "workingDays")
+        previousValue = [...new Set([...previousValue, ...["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]])]
+      return previousValue
+    }, [])
+  }
+
+  static getSlots(event) {
+    return event.availabilities.reduce((previousValue, currentValue) => {
+      console.log(currentValue)
+      let days = []
+      if (currentValue.day === "workingDays") {
+        days = [1, 2, 3, 4, 5]
+      } else {
+        const currentDay = moment().day(currentValue.day)
+        days = [currentDay.day()]
+      }
+
+      let dateStart = moment()
+        .hour(currentValue.startingHour.split(":")[0])
+        .minute(currentValue.startingHour.split(":")[1])
+        .second(0)
+      const endDate = moment()
+        .hour(currentValue.endingHour.split(":")[0])
+        .minute(currentValue.endingHour.split(":")[1])
+        .second(0)
+
+      const hours = []
+
+      while (dateStart.isBefore(endDate)) {
+        hours.push(dateStart)
+        dateStart = moment(dateStart).add(event.duration, "minutes")
+      }
+
+      days.map((day) => {
+        if (!Object(previousValue).hasOwnProperty(day)) previousValue[day] = {}
+        previousValue[day] = hours
+      })
+
+      return previousValue
+    }, {})
   }
 }

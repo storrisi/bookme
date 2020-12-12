@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom"
 import Home from "../features/Home"
 import CreateEvent from "../features/CreateEvent"
 import { UserContext } from "../utils/UserContext"
+import Booking from "../features/Booking"
 
 export default function App() {
   const [context, setContext] = useState({})
@@ -20,6 +21,9 @@ export default function App() {
           <Switch>
             <Route path="/create-event">
               <CreateEvent />
+            </Route>
+            <Route path="/c/:userId/:eventUrl">
+              <Booking />
             </Route>
             <Route path="/">
               <Home />
