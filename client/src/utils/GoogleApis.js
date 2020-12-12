@@ -1,49 +1,44 @@
-class ApiCalendar {
-  constructor() {
-    this.sign = false
-    this.gapi = window["gapi"]
-    this.onLoadCallback = null
-    this.calendar = "primary"
+import React from "react"
 
-    this.handleClientLoad()
-  }
+export const useGoogleApi = (client_id, apiKey) => {
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false)
+  const [isClientLoaded, setIsClientLoaded] = React.useState(false)
+  const gapi = window["gapi"]
 
-  handleClientLoad() {
-    this.gapi.load("client:auth2", () => {
-      this.gapi.auth2.init({ client_id: process.env.REACT_APP_CLIENT_ID }, () => this.authenticate())
-    })
-  }
+  const authenticate = async () => {
+    const GoogleAuth = await gapi.auth2.getAuthInstance()
 
-  authenticate() {
-    return this.gapi.auth2
+    if (GoogleAuth.isSignedIn.get()) {
+      return setIsAuthenticated(true)
+    }
+
+    return gapi.auth2
       .getAuthInstance()
       .signIn({ scope: "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.readonly" })
       .then(
-        function () {
-          return true
-        },
-        function (err) {
+        () => setIsAuthenticated(true),
+        (err) => {
           console.error("Error signing in", err)
         }
       )
   }
 
-  initClient() {
-    this.gapi.client.setApiKey(process.env.REACT_APP_API_KEY)
-    return this.gapi.client.load("https://content.googleapis.com/discovery/v1/apis/calendar/v3/rest").then(
-      function () {
-        return true
+  const loadClient = async () => {
+    gapi.client.setApiKey(apiKey)
+    return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/calendar/v3/rest").then(
+      () => {
+        console.log("GAPI client loaded for API")
+        setIsClientLoaded(true)
       },
-      function (err) {
+      (err) => {
         console.error("Error loading GAPI client for API", err)
       }
     )
   }
 
-  getCalendarList() {
-    return this.gapi.client.calendar.calendarList.list({}).then(
+  const getCalendarList = async () => {
+    return gapi.client.calendar.calendarList.list({}).then(
       function (response) {
-        // Handle the results here (response.result has the parsed body).
         return response.result.items
       },
       function (err) {
@@ -51,6 +46,16 @@ class ApiCalendar {
       }
     )
   }
-}
 
-export default ApiCalendar
+  React.useEffect(() => {
+    gapi.load("client:auth2", () => {
+      gapi.auth2.init({ client_id }).then(authenticate)
+    })
+  })
+
+  React.useEffect(() => {
+    isAuthenticated && loadClient()
+  }, [isAuthenticated])
+
+  return { isAuthenticated, isClientLoaded, getCalendarList }
+}

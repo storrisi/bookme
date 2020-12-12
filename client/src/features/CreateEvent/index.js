@@ -18,7 +18,7 @@ import "moment-duration-format"
 import CreateEventElement from "./CreateEventElement"
 import Event from "../../utils/EventClass"
 import { urlValidation } from "../../utils/utils"
-import ApiCalendar from "../../utils/GoogleApis"
+import { useGoogleApi } from "../../utils/GoogleApis"
 
 function Alert(props) {
   return <MuiAlert elevation={6} variant="filled" {...props} />
@@ -85,7 +85,10 @@ export default function CreateEvent() {
   const [errors, setErrors] = useState({})
   const [openConfirmation, setOpenConfirmation] = useState(false)
   const [openError, setOpenError] = useState(false)
-
+  const { isAuthenticated, isClientLoaded, getCalendarList } = useGoogleApi(
+    process.env.REACT_APP_CLIENT_ID,
+    process.env.REACT_APP_API_KEY
+  )
   const onEventAdd = (item, index) => {
     const list = events.concat([emptyEvent])
     list[index] = item
@@ -145,17 +148,8 @@ export default function CreateEvent() {
   }
 
   useEffect(() => {
-    async function fetchData() {
-      const api = new ApiCalendar()
-      try {
-        setTimeout(() => api.initClient().then(() => api.getCalendarList().then((res) => console.log(res))), 1000)
-        //console.log(res)
-      } catch (e) {
-        console.log(e)
-      }
-    }
-    fetchData()
-  }, [])
+    isAuthenticated && isClientLoaded && getCalendarList().then((res) => console.log(res))
+  }, [isClientLoaded, isAuthenticated])
 
   return (
     <div>
