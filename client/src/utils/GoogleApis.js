@@ -39,6 +39,7 @@ export const useGoogleApi = (client_id, apiKey) => {
   const getCalendarList = async () => {
     return gapi.client.calendar.calendarList.list({}).then(
       function (response) {
+        console.log(response.result.items)
         return response.result.items
       },
       function (err) {

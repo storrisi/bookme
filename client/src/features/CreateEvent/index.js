@@ -11,6 +11,10 @@ import {
   Switch,
   FormControlLabel,
   Snackbar,
+  FormControl,
+  FormLabel,
+  FormGroup,
+  Checkbox,
 } from "@material-ui/core"
 import MuiAlert from "@material-ui/lab/Alert"
 import moment from "moment"
@@ -85,6 +89,7 @@ export default function CreateEvent() {
   const [errors, setErrors] = useState({})
   const [openConfirmation, setOpenConfirmation] = useState(false)
   const [openError, setOpenError] = useState(false)
+  const [userCalendars, setUserCalendars] = useState([])
   const { isAuthenticated, isClientLoaded, getCalendarList } = useGoogleApi(
     process.env.REACT_APP_CLIENT_ID,
     process.env.REACT_APP_API_KEY
@@ -114,6 +119,7 @@ export default function CreateEvent() {
         maxEventsPerDay,
         maxEventsPerWeek,
         availabilities: events,
+        calendars: userCalendars.filter((userCalendar) => userCalendar.checked),
       },
       profileObj.googleId
     )
@@ -132,6 +138,11 @@ export default function CreateEvent() {
     setMaxEventsPerDay(DEFAULT_MAX_EVENTS)
     setMaxEventsPerWeek(DEFAULT_MAX_EVENTS)
     setEvents(DEFAULT_EVENTS)
+    setUserCalendars(
+      userCalendars.map((userCalendar) => {
+        return { ...userCalendar, checked: true }
+      })
+    )
   }
 
   function valuetext(value) {
@@ -148,7 +159,15 @@ export default function CreateEvent() {
   }
 
   useEffect(() => {
-    isAuthenticated && isClientLoaded && getCalendarList().then((res) => console.log(res))
+    isAuthenticated &&
+      isClientLoaded &&
+      getCalendarList().then((res) =>
+        setUserCalendars(
+          res.map((calendar) => {
+            return { ...calendar, checked: true }
+          })
+        )
+      )
   }, [isClientLoaded, isAuthenticated])
 
   return (
@@ -274,17 +293,48 @@ export default function CreateEvent() {
             </Grid>
           </Grid>
         </Grid>
-        {events.map((event, index) => (
-          <CreateEventElement
-            item={event}
-            key={`event_${index}`}
-            onAdd={(item) => onEventAdd(item, index)}
-            onRemove={() => onEventRemove(index)}
-            hideDelete={index === 0}
-            hasErrors={errors.hasOwnProperty("slots") && errors.slots.hasOwnProperty(index)}
-            error={errors.hasOwnProperty("slots") && errors.slots[index]}
-          />
-        ))}
+        <Grid item>
+          {events.map((event, index) => (
+            <CreateEventElement
+              item={event}
+              key={`event_${index}`}
+              onAdd={(item) => onEventAdd(item, index)}
+              onRemove={() => onEventRemove(index)}
+              hideDelete={index === 0}
+              hasErrors={errors.hasOwnProperty("slots") && errors.slots.hasOwnProperty(index)}
+              error={errors.hasOwnProperty("slots") && errors.slots[index]}
+            />
+          ))}
+        </Grid>
+        <Grid item>
+          <FormControl component="fieldset" className={classes.formControl}>
+            <FormLabel component="legend">Select which Calendars should be checked for this availability</FormLabel>
+            <FormGroup>
+              {userCalendars &&
+                userCalendars.map((calendar) => (
+                  <FormControlLabel
+                    key={calendar.id}
+                    control={
+                      <Checkbox
+                        checked={calendar.checked}
+                        onChange={() =>
+                          setUserCalendars(
+                            userCalendars.map((userCalendar) => {
+                              if (userCalendar.id === calendar.id)
+                                return { ...userCalendar, checked: !userCalendar.checked }
+                              return { ...userCalendar }
+                            })
+                          )
+                        }
+                        name={calendar.summary}
+                      />
+                    }
+                    label={calendar.summary}
+                  />
+                ))}
+            </FormGroup>
+          </FormControl>
+        </Grid>
       </Grid>
       <Snackbar open={openConfirmation} autoHideDuration={3000} onClose={handleClose}>
         <Alert severity="success">Event saved successfully!</Alert>
