@@ -90,6 +90,7 @@ export default function CreateEvent() {
   const [openConfirmation, setOpenConfirmation] = useState(false)
   const [openError, setOpenError] = useState(false)
   const [userCalendars, setUserCalendars] = useState([])
+  const [eventSaveCalendars, setEventSaveCalendars] = useState([])
   const { isAuthenticated, isClientLoaded, getCalendarList } = useGoogleApi(
     process.env.REACT_APP_CLIENT_ID,
     process.env.REACT_APP_API_KEY
@@ -120,6 +121,7 @@ export default function CreateEvent() {
         maxEventsPerWeek,
         availabilities: events,
         calendars: userCalendars.filter((userCalendar) => userCalendar.checked),
+        eventSaveCalendars: eventSaveCalendars.filter((userCalendar) => userCalendar.checked),
       },
       profileObj.googleId
     )
@@ -140,7 +142,12 @@ export default function CreateEvent() {
     setEvents(DEFAULT_EVENTS)
     setUserCalendars(
       userCalendars.map((userCalendar) => {
-        return { ...userCalendar, checked: true }
+        return { ...userCalendar, checked: userCalendar.selected ? true : false }
+      })
+    )
+    setEventSaveCalendars(
+      eventSaveCalendars.map((userCalendar) => {
+        return { ...userCalendar, checked: userCalendar.primary ? true : false }
       })
     )
   }
@@ -161,13 +168,18 @@ export default function CreateEvent() {
   useEffect(() => {
     isAuthenticated &&
       isClientLoaded &&
-      getCalendarList().then((res) =>
+      getCalendarList().then((res) => {
         setUserCalendars(
           res.map((calendar) => {
-            return { ...calendar, checked: true }
+            return { ...calendar, checked: calendar.selected ? true : false }
           })
         )
-      )
+        setEventSaveCalendars(
+          res.map((calendar) => {
+            return { ...calendar, checked: calendar.primary ? true : false }
+          })
+        )
+      })
   }, [isClientLoaded, isAuthenticated])
 
   return (
@@ -306,9 +318,13 @@ export default function CreateEvent() {
             />
           ))}
         </Grid>
+      </Grid>
+      <Grid className={classes.root} spacing={4} container direction="column" justify="start" alignItems="center">
         <Grid item>
           <FormControl component="fieldset" className={classes.formControl}>
-            <FormLabel component="legend">Select which Calendars should be checked for this availability</FormLabel>
+            <FormLabel component="legend">
+              Select which Calendars should be used to be compared for this availability
+            </FormLabel>
             <FormGroup>
               {userCalendars &&
                 userCalendars.map((calendar) => (
@@ -332,6 +348,37 @@ export default function CreateEvent() {
                     label={calendar.summary}
                   />
                 ))}
+            </FormGroup>
+          </FormControl>
+        </Grid>
+        <Grid item>
+          <FormControl component="fieldset" className={classes.formControl}>
+            <FormLabel component="legend">Select where new events will be saved</FormLabel>
+            <FormGroup>
+              {eventSaveCalendars &&
+                eventSaveCalendars
+                  .filter((calendar) => calendar.accessRole === "owner")
+                  .map((calendar) => (
+                    <FormControlLabel
+                      key={calendar.id}
+                      control={
+                        <Checkbox
+                          checked={calendar.checked}
+                          onChange={() =>
+                            setEventSaveCalendars(
+                              eventSaveCalendars.map((userCalendar) => {
+                                if (userCalendar.id === calendar.id)
+                                  return { ...userCalendar, checked: !userCalendar.checked }
+                                return { ...userCalendar }
+                              })
+                            )
+                          }
+                          name={calendar.summary}
+                        />
+                      }
+                      label={calendar.summary}
+                    />
+                  ))}
             </FormGroup>
           </FormControl>
         </Grid>
