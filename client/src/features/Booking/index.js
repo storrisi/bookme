@@ -1,16 +1,31 @@
 import React from "react"
 import { useParams } from "react-router-dom"
 import "react-dates/initialize"
-import { Grid } from "@material-ui/core"
+import { Button, Grid, makeStyles, TextField } from "@material-ui/core"
 import { DayPickerSingleDateController } from "react-dates"
 import moment from "moment"
 import uniq from "lodash/uniq"
 import Event from "../../utils/EventClass"
+import BookingClass from "../../utils/BookingClass"
 import "react-dates/lib/css/_datepicker.css"
 import { useGoogleApi } from "../../utils/GoogleApis"
 import style from "./style.module.css"
 
+const useStyles = makeStyles((theme) => ({
+  root: {
+    width: "100%",
+  },
+  formControl: {
+    margin: theme.spacing(1),
+    minWidth: 120,
+  },
+  button: {
+    marginTop: theme.spacing(2),
+  },
+}))
+
 export default function Booking() {
+  const classes = useStyles()
   const { userId, eventUrl } = useParams()
   const [event, setEvent] = React.useState({})
   const [availableDays, setAvailableDays] = React.useState([])
@@ -18,6 +33,8 @@ export default function Booking() {
   const [daySlots, setDaySlots] = React.useState([])
   const [busyEvents, setBusyEvents] = React.useState([])
   const [selectedSlot, setSelectedSlot] = React.useState(null)
+  const [selectedDate, setSelectedDate] = React.useState(null)
+  const [details, setDetails] = React.useState({ name: "", email: "", message: "" })
 
   React.useEffect(() => {
     Event.get(userId, eventUrl).then((res) => {
@@ -63,6 +80,7 @@ export default function Booking() {
   const isBlockedDay = (day) => day.isBefore(moment(), "day") || availableDays.indexOf(day.format("dddd")) === -1
   const isHighlightedDay = (day) => day.isSameOrAfter(moment(), "day") && availableDays.indexOf(day.format("dddd")) > -1
   const onDateChange = (date) => {
+    setSelectedDate(date)
     setSelectedSlot(null)
     const availableSlots = slots[date.day()]
     const sameDayEvents = uniq(
@@ -80,28 +98,84 @@ export default function Booking() {
     )
   }
 
+  const changeDetails = (id, value) =>
+    setDetails((previousState) => {
+      return { ...previousState, [id]: value }
+    })
+
+  const onSave = () => {
+    BookingClass.save(
+      {
+        ...details,
+        date: selectedDate.hour(selectedSlot.hour()).minutes(selectedSlot.minutes()).format("YYYY-MM-DD HH:mm"),
+      },
+      userId
+    ).then(() => {
+      setDetails({ name: "", email: "", message: "" })
+      setSelectedSlot(null)
+      setSelectedDate(null)
+    })
+  }
+
   return (
-    <Grid container direction="row" justify="center" alignItems="start">
-      <Grid item>
-        <DayPickerSingleDateController
-          onOutsideClick={() => {}}
-          onPrevMonthClick={() => {}}
-          onNextMonthClick={() => {}}
-          numberOfMonths={1}
-          isDayBlocked={isBlockedDay}
-          isDayHighlighted={isHighlightedDay}
-          onDateChange={onDateChange}
-        />
+    <div>
+      <Grid container direction="row" justify="center" alignItems="start">
+        <Grid item>
+          <Grid className={classes.root} spacing={4} container direction="column" justify="center" alignItems="center">
+            <Grid item>
+              <DayPickerSingleDateController
+                onOutsideClick={() => {}}
+                onPrevMonthClick={() => {}}
+                onNextMonthClick={() => {}}
+                numberOfMonths={1}
+                isDayBlocked={isBlockedDay}
+                isDayHighlighted={isHighlightedDay}
+                onDateChange={onDateChange}
+              />
+            </Grid>
+            {selectedSlot && (
+              <>
+                <Grid item>
+                  <TextField
+                    className={classes.slider}
+                    placeholder="Name and Surname"
+                    value={details.name}
+                    onChange={(event) => changeDetails("name", event.target.value)}
+                  />
+                </Grid>
+                <Grid item>
+                  <TextField
+                    className={classes.slider}
+                    placeholder="Email"
+                    value={details.email}
+                    onChange={(event) => changeDetails("email", event.target.value)}
+                  />
+                </Grid>
+                <Grid item>
+                  <TextField
+                    className={classes.slider}
+                    placeholder="Message"
+                    value={details.message}
+                    onChange={(event) => changeDetails("message", event.target.value)}
+                  />
+                </Grid>
+                <Button variant="contained" color="primary" className={classes.saveButton} onClick={onSave}>
+                  Save Event
+                </Button>
+              </>
+            )}
+          </Grid>
+        </Grid>
+        <Grid item>
+          {daySlots.map((slot) => (
+            <div
+              className={`${style.slot} ${selectedSlot === slot && style.selected}`}
+              key={`${slot.format("HH:mm")}`}
+              onClick={() => setSelectedSlot(slot)}
+            >{`${slot.format("HH:mm")}`}</div>
+          ))}
+        </Grid>
       </Grid>
-      <Grid item>
-        {daySlots.map((slot) => (
-          <div
-            className={`${style.slot} ${selectedSlot === slot && style.selected}`}
-            key={`${slot.format("HH:mm")}`}
-            onClick={() => setSelectedSlot(slot)}
-          >{`${slot.format("HH:mm")}`}</div>
-        ))}
-      </Grid>
-    </Grid>
+    </div>
   )
 }
