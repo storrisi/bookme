@@ -1,0 +1,25 @@
+.Booking {
+  display: flex;
+}
+.datePicker,
+.slots {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+.slot {
+  margin: 10px;
+  width: 200px;
+  height: 80px;
+  border: 1px #e4e4e4 solid;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.slot.selected {
+  background-color: aquamarine;
+}

@@ -67,7 +67,6 @@ export default class Event {
 
   static getSlots(event) {
     return event.availabilities.reduce((previousValue, currentValue) => {
-      console.log(currentValue)
       let days = []
       if (currentValue.day === "workingDays") {
         days = [1, 2, 3, 4, 5]
@@ -92,7 +91,7 @@ export default class Event {
         dateStart = moment(dateStart).add(event.duration, "minutes")
       }
 
-      days.map((day) => {
+      days.forEach((day) => {
         if (!Object(previousValue).hasOwnProperty(day)) previousValue[day] = {}
         previousValue[day] = hours
       })
