@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
 import "react-dates/initialize"
 import { Button, Grid, makeStyles, TextField } from "@material-ui/core"
@@ -27,17 +27,17 @@ const useStyles = makeStyles((theme) => ({
 export default function Booking() {
   const classes = useStyles()
   const { userId, eventUrl } = useParams()
-  const [event, setEvent] = React.useState({})
-  const [bookings, setBookings] = React.useState([])
-  const [availableDays, setAvailableDays] = React.useState([])
-  const [slots, setSlots] = React.useState({})
-  const [daySlots, setDaySlots] = React.useState([])
-  const [busyEvents, setBusyEvents] = React.useState([])
-  const [selectedSlot, setSelectedSlot] = React.useState(null)
-  const [selectedDate, setSelectedDate] = React.useState(null)
-  const [details, setDetails] = React.useState({ name: "", email: "", message: "" })
+  const [event, setEvent] = useState({})
+  const [bookings, setBookings] = useState([])
+  const [availableDays, setAvailableDays] = useState([])
+  const [slots, setSlots] = useState({})
+  const [daySlots, setDaySlots] = useState([])
+  const [busyEvents, setBusyEvents] = useState([])
+  const [selectedSlot, setSelectedSlot] = useState(null)
+  const [selectedDate, setSelectedDate] = useState(null)
+  const [details, setDetails] = useState({ name: "", email: "", message: "" })
 
-  React.useEffect(() => {
+  useEffect(() => {
     const eventAndBooking = [
       Event.get(userId, eventUrl).then((res) => {
         setEvent(res)
@@ -56,7 +56,7 @@ export default function Booking() {
     })
   }, [userId, eventUrl])
 
-  React.useEffect(() => {
+  useEffect(() => {
     async function fetchData() {
       const calendars = event.calendars.map((calendar) => {
         return { id: calendar.id }
@@ -92,7 +92,9 @@ export default function Booking() {
     day.isBefore(moment(), "day") ||
     availableDays.indexOf(day.format("dddd")) === -1 ||
     Event.isBlockedDay(event, bookings, day)
+
   const isHighlightedDay = (day) => day.isSameOrAfter(moment(), "day") && availableDays.indexOf(day.format("dddd")) > -1
+
   const onDateChange = (date) => {
     setSelectedDate(date)
     setSelectedSlot(null)
@@ -105,9 +107,13 @@ export default function Booking() {
       availableSlots.filter(
         (slot) =>
           date.hour(slot.hour()).isSameOrAfter() &&
-          sameDayEvents.filter(
-            (sameDay) => slot.hour() >= moment(sameDay.start).hour() && slot.hour() <= moment(sameDay.end).hour()
-          ).length === 0
+          sameDayEvents.filter((sameDay) => {
+            return Event.isBusySlot(slot, date, event.duration, sameDay)
+          }).length === 0 &&
+          bookings &&
+          bookings.filter((booking) => {
+            return Event.isBusySlot(slot, date, event.duration, { start: booking.date, end: booking.dateEnd })
+          }).length === 0
       )
     )
   }
@@ -122,6 +128,11 @@ export default function Booking() {
       {
         ...details,
         date: selectedDate.hour(selectedSlot.hour()).minutes(selectedSlot.minutes()).valueOf(),
+        dateEnd: selectedDate
+          .hour(selectedSlot.hour())
+          .minutes(selectedSlot.minutes())
+          .add(event.duration, "minutes")
+          .valueOf(),
       },
       userId
     ).then(() => {

@@ -124,4 +124,23 @@ export default class Event {
 
     return false
   }
+
+  /**
+   * Check whether is a busy slot comparing the date with any event date
+   * @param {*} slot
+   * @param {*} date
+   * @param {*} duration
+   * @param {*} sameDay
+   */
+  static isBusySlot(slot, date, duration, sameDay) {
+    const slotStart = moment(date.hour(slot.hour()))
+    const slotEnd = moment(date.hour(slot.hour()))
+    slotEnd.add(duration, "m")
+    const eventStart = moment(sameDay.start)
+    const eventEnd = moment(sameDay.end)
+    return (
+      slotStart.isBetween(eventStart, eventEnd, undefined, "[)") ||
+      slotEnd.isBetween(eventStart, eventEnd, undefined, "(]")
+    )
+  }
 }
