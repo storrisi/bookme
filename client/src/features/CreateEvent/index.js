@@ -357,7 +357,7 @@ export default function CreateEvent() {
             <FormGroup>
               {eventSaveCalendars &&
                 eventSaveCalendars
-                  .filter((calendar) => calendar.accessRole === "owner")
+                  .filter((calendar) => calendar.accessRole === "owner" || calendar.accessRole === "writer")
                   .map((calendar) => (
                     <FormControlLabel
                       key={calendar.id}

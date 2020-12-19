@@ -116,7 +116,6 @@ export default function Booking() {
     BookingClass.save(
       {
         ...details,
-        organizer: event.organizer,
         date: selectedDate.hour(selectedSlot.hour()).minutes(selectedSlot.minutes()).valueOf(),
         dateEnd: selectedDate
           .hour(selectedSlot.hour())

@@ -87,16 +87,17 @@ export default class Event {
 
       const hours = []
 
-      while (dateStart.isBefore(endDate)) {
+      while (dateStart.isSameOrBefore(endDate)) {
         hours.push(dateStart)
         dateStart = moment(dateStart).add(event.duration, "minutes")
       }
 
       days.forEach((day) => {
-        if (!Object(previousValue).hasOwnProperty(day)) previousValue[day] = {}
-        previousValue[day] = hours
+        if (!Object(previousValue).hasOwnProperty(day)) previousValue[day] = []
+        previousValue[day] = previousValue[day].concat(hours)
       })
 
+      console.log(previousValue)
       return previousValue
     }, {})
   }
