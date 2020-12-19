@@ -2,7 +2,7 @@ import firebase from "./firebase"
 import moment from "moment"
 
 export default class Booking {
-  static save(event, userId) {
+  static save(event, userId, calendars, createCalendarEvent) {
     const bookingsRef = firebase.database().ref("bookings")
     var userBookingsRef = bookingsRef.child(userId)
 
@@ -13,6 +13,16 @@ export default class Booking {
           console.error(error)
           reject(false)
         } else {
+          calendars.forEach((calendarId) =>
+            createCalendarEvent(calendarId, event.organizer, {
+              name: event.name,
+              message: event.message,
+              email: event.email,
+              startDate: moment(event.date).utc(),
+              endDate: moment(event.dateEnd).utc(),
+            })
+          )
+
           resolve(true)
         }
       })

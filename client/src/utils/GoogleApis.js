@@ -38,6 +38,37 @@ export const useGoogleApi = (client_id, apiKey) => {
     )
   }
 
+  const createCalendarEvent = async (calendarId, organizer, details) => {
+    const event = {
+      summary: details.name,
+      description: details.message,
+      start: {
+        dateTime: details.startDate,
+      },
+      end: {
+        dateTime: details.endDate,
+      },
+      attendees: [{ email: details.email, responseStatus: "accepted" }],
+      reminders: {
+        useDefault: true,
+      },
+      conferenceData: {
+        createRequest: { requestId: Math.random().toString().substr(2, 12) },
+      },
+    }
+
+    const request = gapi.client.calendar.events.insert({
+      calendarId,
+      conferenceDataVersion: 1,
+      sendUpdates: "all",
+      resource: event,
+    })
+
+    request.execute(function (event) {
+      console.log("Event created: " + event.htmlLink)
+    })
+  }
+
   const getCalendarFreeBusySlots = async (userCalendars) => {
     const calendars = userCalendars.map((calendar) => {
       return { id: calendar.id }
@@ -92,5 +123,5 @@ export const useGoogleApi = (client_id, apiKey) => {
     isAuthenticated && loadClient()
   }, [isAuthenticated, apiKey, gapi])
 
-  return { signOut, isAuthenticated, isClientLoaded, getCalendarList, getCalendarFreeBusySlots }
+  return { signOut, isAuthenticated, isClientLoaded, getCalendarList, getCalendarFreeBusySlots, createCalendarEvent }
 }

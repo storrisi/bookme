@@ -37,10 +37,14 @@ export default function Booking() {
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [selectedDate, setSelectedDate] = useState(null)
   const [details, setDetails] = useState({ name: "", email: "", message: "" })
-  const { signOut, isAuthenticated, isClientLoaded, getCalendarList, getCalendarFreeBusySlots } = useGoogleApi(
-    process.env.REACT_APP_CLIENT_ID,
-    process.env.REACT_APP_API_KEY
-  )
+  const {
+    signOut,
+    isAuthenticated,
+    isClientLoaded,
+    getCalendarList,
+    getCalendarFreeBusySlots,
+    createCalendarEvent,
+  } = useGoogleApi(process.env.REACT_APP_CLIENT_ID, process.env.REACT_APP_API_KEY)
 
   useEffect(() => {
     const eventAndBooking = [
@@ -50,7 +54,7 @@ export default function Booking() {
       }),
 
       BookingClass.get(userId).then((res) => {
-        setBookings(res)
+        if (res) setBookings(res)
         return res
       }),
     ]
@@ -96,7 +100,6 @@ export default function Booking() {
           sameDayEvents.filter((sameDay) => {
             return Event.isBusySlot(slot, date, event.duration, sameDay)
           }).length === 0 &&
-          bookings &&
           bookings.filter((booking) => {
             return Event.isBusySlot(slot, date, event.duration, { start: booking.date, end: booking.dateEnd })
           }).length === 0
@@ -113,6 +116,7 @@ export default function Booking() {
     BookingClass.save(
       {
         ...details,
+        organizer: event.organizer,
         date: selectedDate.hour(selectedSlot.hour()).minutes(selectedSlot.minutes()).valueOf(),
         dateEnd: selectedDate
           .hour(selectedSlot.hour())
@@ -120,7 +124,9 @@ export default function Booking() {
           .add(event.duration, "minutes")
           .valueOf(),
       },
-      userId
+      userId,
+      event.eventSaveCalendars.map((calendar) => calendar.id),
+      createCalendarEvent
     ).then(() => {
       setDetails({ name: "", email: "", message: "" })
       setSelectedSlot(null)
