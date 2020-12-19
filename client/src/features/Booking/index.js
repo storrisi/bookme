@@ -33,9 +33,14 @@ export default function Booking() {
   const [slots, setSlots] = useState({})
   const [daySlots, setDaySlots] = useState([])
   const [busyEvents, setBusyEvents] = useState([])
+  const [userEvents, setUserEvents] = useState([])
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [selectedDate, setSelectedDate] = useState(null)
   const [details, setDetails] = useState({ name: "", email: "", message: "" })
+  const { signOut, isAuthenticated, isClientLoaded, getCalendarList, getCalendarFreeBusySlots } = useGoogleApi(
+    process.env.REACT_APP_CLIENT_ID,
+    process.env.REACT_APP_API_KEY
+  )
 
   useEffect(() => {
     const eventAndBooking = [
@@ -57,36 +62,17 @@ export default function Booking() {
   }, [userId, eventUrl])
 
   useEffect(() => {
-    async function fetchData() {
-      const calendars = event.calendars.map((calendar) => {
-        return { id: calendar.id }
-      })
-
-      const response = await fetch(
-        `https://www.googleapis.com/calendar/v3/freeBusy?key=${process.env.REACT_APP_API_KEY}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json;charset=utf-8",
-          },
-          body: JSON.stringify({
-            timeMin: moment(),
-            timeMax: moment().add("3", "month"),
-            items: calendars,
-          }),
-        }
-      )
-
-      const result = await response.json()
-      const busyEvents = Object.keys(result.calendars).reduce((previousValue, currentValue) => {
-        const calendar = result.calendars[currentValue]
-        return previousValue.concat(previousValue, calendar.busy)
-      }, [])
-
-      setBusyEvents(busyEvents)
-    }
-    if (Object.keys(event).length > 0) fetchData()
+    if (Object.keys(event).length > 0) getCalendarFreeBusySlots(event.calendars).then((res) => setBusyEvents(res))
   }, [event])
+
+  useEffect(() => {
+    isAuthenticated &&
+      isClientLoaded &&
+      getCalendarList().then((res) => {
+        if (res.error) return
+        getCalendarFreeBusySlots(res).then((res) => setUserEvents(res))
+      })
+  }, [isClientLoaded, isAuthenticated])
 
   const isBlockedDay = (day) =>
     day.isBefore(moment(), "day") ||
@@ -101,7 +87,7 @@ export default function Booking() {
     const availableSlots = slots[date.day()]
     const sameDayEvents = uniq(
       busyEvents.filter((busyEvent) => date.isBetween(busyEvent.start, busyEvent.end, "day", "[]"))
-    )
+    ).concat(uniq(userEvents.filter((userEvent) => date.isBetween(userEvent.start, userEvent.end, "day", "[]"))))
 
     setDaySlots(
       availableSlots.filter(
@@ -144,6 +130,8 @@ export default function Booking() {
 
   return (
     <div>
+      <h1>Find the perfect Slot matching your availabilities with the User's ones.</h1>
+      <h2>You need to give access to your Google Calendar in order to retrieve your availabilities</h2>
       <Grid container direction="row" justify="center" alignItems="start">
         <Grid item>
           <Grid className={classes.root} spacing={4} container direction="column" justify="center" alignItems="center">
@@ -189,16 +177,24 @@ export default function Booking() {
                 </Button>
               </>
             )}
+            <Button variant="contained" color="primary" className={classes.saveButton} onClick={signOut}>
+              Sign Out
+            </Button>
           </Grid>
         </Grid>
         <Grid item>
-          {daySlots.map((slot) => (
-            <div
-              className={`${style.slot} ${selectedSlot === slot && style.selected}`}
-              key={`${slot.format("HH:mm")}`}
-              onClick={() => setSelectedSlot(slot)}
-            >{`${slot.format("HH:mm")}`}</div>
-          ))}
+          {selectedDate && <Grid item>{selectedDate.format("dddd DD MMMM YYYY")}</Grid>}
+          {daySlots && daySlots.length > 0 ? (
+            daySlots.map((slot) => (
+              <div
+                className={`${style.slot} ${selectedSlot === slot && style.selected}`}
+                key={`${slot.format("HH:mm")}`}
+                onClick={() => setSelectedSlot(slot)}
+              >{`${slot.format("HH:mm")}`}</div>
+            ))
+          ) : (
+            <div>No Slots available</div>
+          )}
         </Grid>
       </Grid>
     </div>

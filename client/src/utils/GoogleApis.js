@@ -1,4 +1,6 @@
 import React from "react"
+import moment from "moment"
+import uniq from "lodash/uniq"
 
 export const useGoogleApi = (client_id, apiKey) => {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false)
@@ -23,29 +25,48 @@ export const useGoogleApi = (client_id, apiKey) => {
       )
   }
 
-  const loadClient = async () => {
-    gapi.client.setApiKey(apiKey)
-    return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/calendar/v3/rest").then(
-      () => {
-        console.log("GAPI client loaded for API")
-        setIsClientLoaded(true)
-      },
-      (err) => {
-        console.error("Error loading GAPI client for API", err)
-      }
-    )
-  }
+  const signOut = async () => gapi.auth2.getAuthInstance().signOut()
 
   const getCalendarList = async () => {
     return gapi.client.calendar.calendarList.list({}).then(
       function (response) {
-        console.log(response.result.items)
         return response.result.items
       },
       function (err) {
         console.error("Execute error", err)
       }
     )
+  }
+
+  const getCalendarFreeBusySlots = async (userCalendars) => {
+    const calendars = userCalendars.map((calendar) => {
+      return { id: calendar.id }
+    })
+
+    const response = await fetch(
+      `https://www.googleapis.com/calendar/v3/freeBusy?key=${process.env.REACT_APP_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json;charset=utf-8",
+        },
+        body: JSON.stringify({
+          timeMin: moment(),
+          timeMax: moment().add("3", "month"),
+          items: calendars,
+        }),
+      }
+    )
+
+    const result = await response.json()
+    if (Object.keys(result.calendars).length === 0) return false
+
+    const busyEvents = Object.keys(result.calendars).reduce((previousValue, currentValue) => {
+      const calendar = result.calendars[currentValue]
+      return previousValue.concat(previousValue, calendar.busy)
+    }, [])
+
+    return uniq(busyEvents)
   }
 
   React.useEffect(() => {
@@ -55,8 +76,21 @@ export const useGoogleApi = (client_id, apiKey) => {
   })
 
   React.useEffect(() => {
-    isAuthenticated && loadClient()
-  }, [isAuthenticated])
+    const loadClient = async () => {
+      gapi.client.setApiKey(apiKey)
+      return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/calendar/v3/rest").then(
+        () => {
+          console.log("GAPI client loaded for API")
+          setIsClientLoaded(true)
+        },
+        (err) => {
+          console.error("Error loading GAPI client for API", err)
+        }
+      )
+    }
 
-  return { isAuthenticated, isClientLoaded, getCalendarList }
+    isAuthenticated && loadClient()
+  }, [isAuthenticated, apiKey, gapi])
+
+  return { signOut, isAuthenticated, isClientLoaded, getCalendarList, getCalendarFreeBusySlots }
 }
