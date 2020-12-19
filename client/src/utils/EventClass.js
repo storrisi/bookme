@@ -87,7 +87,7 @@ export default class Event {
 
       const hours = []
 
-      while (dateStart.isSameOrBefore(endDate)) {
+      while (dateStart.isBefore(endDate)) {
         hours.push(dateStart)
         dateStart = moment(dateStart).add(event.duration, "minutes")
       }

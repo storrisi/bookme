@@ -94,16 +94,18 @@ export default function Booking() {
     ).concat(uniq(userEvents.filter((userEvent) => date.isBetween(userEvent.start, userEvent.end, "day", "[]"))))
 
     setDaySlots(
-      availableSlots.filter(
-        (slot) =>
-          date.hour(slot.hour()).isSameOrAfter() &&
-          sameDayEvents.filter((sameDay) => {
-            return Event.isBusySlot(slot, date, event.duration, sameDay)
-          }).length === 0 &&
-          bookings.filter((booking) => {
-            return Event.isBusySlot(slot, date, event.duration, { start: booking.date, end: booking.dateEnd })
-          }).length === 0
-      )
+      availableSlots
+        .filter(
+          (slot) =>
+            date.hour(slot.hour()).isSameOrAfter() &&
+            sameDayEvents.filter((sameDay) => {
+              return Event.isBusySlot(slot, date, event.duration, sameDay)
+            }).length === 0 &&
+            bookings.filter((booking) => {
+              return Event.isBusySlot(slot, date, event.duration, { start: booking.date, end: booking.dateEnd })
+            }).length === 0
+        )
+        .sort()
     )
   }
 
