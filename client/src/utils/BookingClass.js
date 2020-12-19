@@ -14,7 +14,7 @@ export default class Booking {
           reject(false)
         } else {
           calendars.forEach((calendarId) =>
-            createCalendarEvent(calendarId, event.organizer, {
+            createCalendarEvent(calendarId, {
               name: event.name,
               message: event.message,
               email: event.email,

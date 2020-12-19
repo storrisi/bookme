@@ -38,7 +38,7 @@ export const useGoogleApi = (client_id, apiKey) => {
     )
   }
 
-  const createCalendarEvent = async (calendarId, organizer, details) => {
+  const createCalendarEvent = async (calendarId, details) => {
     const event = {
       summary: details.name,
       description: details.message,
@@ -48,7 +48,7 @@ export const useGoogleApi = (client_id, apiKey) => {
       end: {
         dateTime: details.endDate,
       },
-      attendees: [{ email: details.email, responseStatus: "accepted" }],
+      attendees: [{ email: details.email, responseStatus: "needsAction" }],
       reminders: {
         useDefault: true,
       },
