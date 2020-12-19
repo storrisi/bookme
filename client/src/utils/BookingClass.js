@@ -1,4 +1,5 @@
 import firebase from "./firebase"
+import moment from "moment"
 
 export default class Booking {
   static save(event, userId) {
@@ -16,5 +17,21 @@ export default class Booking {
         }
       })
     })
+  }
+
+  static async get(userId) {
+    const eventsRef = firebase.database().ref("bookings")
+    const userEventsRef = eventsRef.child(userId)
+
+    const snapshot = await userEventsRef.orderByChild("date").startAt(moment().valueOf()).once("value")
+
+    const queryResult = snapshot.val()
+
+    if (!queryResult) return false
+
+    const trip = Object.values(queryResult).map((event) => {
+      return { ...event, date: moment(event.date) }
+    })
+    return trip
   }
 }

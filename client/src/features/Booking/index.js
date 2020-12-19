@@ -28,6 +28,7 @@ export default function Booking() {
   const classes = useStyles()
   const { userId, eventUrl } = useParams()
   const [event, setEvent] = React.useState({})
+  const [bookings, setBookings] = React.useState([])
   const [availableDays, setAvailableDays] = React.useState([])
   const [slots, setSlots] = React.useState({})
   const [daySlots, setDaySlots] = React.useState([])
@@ -37,11 +38,21 @@ export default function Booking() {
   const [details, setDetails] = React.useState({ name: "", email: "", message: "" })
 
   React.useEffect(() => {
-    Event.get(userId, eventUrl).then((res) => {
-      setEvent(res)
-      console.log(res)
-      setAvailableDays(Event.getAvailableDays(res.availabilities))
-      setSlots(Event.getSlots(res))
+    const eventAndBooking = [
+      Event.get(userId, eventUrl).then((res) => {
+        setEvent(res)
+        return res
+      }),
+
+      BookingClass.get(userId).then((res) => {
+        setBookings(res)
+        return res
+      }),
+    ]
+
+    Promise.all(eventAndBooking).then((res) => {
+      setAvailableDays(Event.getAvailableDays(res[0]))
+      setSlots(Event.getSlots(res[0]))
     })
   }, [userId, eventUrl])
 
@@ -77,7 +88,10 @@ export default function Booking() {
     if (Object.keys(event).length > 0) fetchData()
   }, [event])
 
-  const isBlockedDay = (day) => day.isBefore(moment(), "day") || availableDays.indexOf(day.format("dddd")) === -1
+  const isBlockedDay = (day) =>
+    day.isBefore(moment(), "day") ||
+    availableDays.indexOf(day.format("dddd")) === -1 ||
+    Event.isBlockedDay(event, bookings, day)
   const isHighlightedDay = (day) => day.isSameOrAfter(moment(), "day") && availableDays.indexOf(day.format("dddd")) > -1
   const onDateChange = (date) => {
     setSelectedDate(date)
@@ -107,7 +121,7 @@ export default function Booking() {
     BookingClass.save(
       {
         ...details,
-        date: selectedDate.hour(selectedSlot.hour()).minutes(selectedSlot.minutes()).format("YYYY-MM-DD HH:mm"),
+        date: selectedDate.hour(selectedSlot.hour()).minutes(selectedSlot.minutes()).valueOf(),
       },
       userId
     ).then(() => {

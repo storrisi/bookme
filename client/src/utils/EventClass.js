@@ -57,7 +57,8 @@ export default class Event {
     return trip
   }
 
-  static getAvailableDays(availabilities) {
+  static getAvailableDays(event) {
+    const { availabilities } = event
     return availabilities.reduce((previousValue, currentValue) => {
       if (currentValue.day === "workingDays")
         previousValue = [...new Set([...previousValue, ...["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]])]
@@ -98,5 +99,29 @@ export default class Event {
 
       return previousValue
     }, {})
+  }
+
+  /**
+   * Check if the current date is blocked because of the configuration of the event
+   * If allowMaxEventsPerDay or allowMaxEventsPerWeek is enabled, check the amount of booking already set for the same period of time
+   * @param {*} event
+   * @param {*} bookings
+   * @param {*} date
+   */
+  static isBlockedDay(event, bookings, date) {
+    const { allowMaxEventsPerDay, allowMaxEventsPerWeek, maxEventsPerDay, maxEventsPerWeek } = event
+    if (!allowMaxEventsPerDay && !allowMaxEventsPerWeek) return false
+    if (!bookings) return false
+
+    if (allowMaxEventsPerDay) {
+      const bookingsPerDay = bookings.filter((booking) => moment(booking.date).isSame(date, "day"))
+      if (bookingsPerDay.length >= maxEventsPerDay) return true
+    }
+    if (allowMaxEventsPerWeek) {
+      const bookingsPerWeek = bookings.filter((booking) => moment(booking.date).isSame(date, "week"))
+      if (bookingsPerWeek.length >= maxEventsPerWeek) return true
+    }
+
+    return false
   }
 }
